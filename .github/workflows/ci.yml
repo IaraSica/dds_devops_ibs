@@ -57,19 +57,27 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Etiquetar imagen para ambos registros
-        shell: bash
         run: |
-          docker tag dds-devops-demo:test \
-            "${{ steps.image.outputs.name }}:${GITHUB_SHA::7}"
+          SHA=${GITHUB_SHA::7}
 
           docker tag dds-devops-demo:test \
-            "${{ secrets.DOCKER_USERNAME }}/dds-devops-demo:${GITHUB_SHA::7}"
+            ${{ steps.image.outputs.name }}:latest
+          docker tag dds-devops-demo:test \
+            ${{ steps.image.outputs.name }}:$SHA
 
-      - name: Publicar imagen en GHCR
-        run: |
-          docker push "${{ steps.image.outputs.name }}:${GITHUB_SHA::7}"
+          docker tag dds-devops-demo:test \
+            ${{ secrets.DOCKER_USERNAME }}/dds-devops-demo:latest
+          docker tag dds-devops-demo:test \
+            ${{ secrets.DOCKER_USERNAME }}/dds-devops-demo:$SHA
 
-      - name: Publicar imagen en Docker Hub
-        run: |
-          docker push "${{ secrets.DOCKER_USERNAME }}/dds-devops-demo:${GITHUB_SHA::7}"
+      - name: Publicar latest en GHCR
+        run: docker push ${{ steps.image.outputs.name }}:latest
 
+      - name: Publicar commit en GHCR
+        run: docker push ${{ steps.image.outputs.name }}:${GITHUB_SHA::7}
+
+      - name: Publicar latest en Docker Hub
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/dds-devops-demo:latest
+
+      - name: Publicar commit en Docker Hub
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/dds-devops-demo:${GITHUB_SHA::7}
